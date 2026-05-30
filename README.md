@@ -445,4 +445,115 @@ yields:
   sectname __weights
 ```
 
-  -> it already shows a __weights directory which is promising. The sectname __weights is a custom section, not part of the standard Mach-O layout ([Source](https://developer.apple.com/library/archive/documentation/Performance/Conceptual/CodeFootprint/Articles/MachOOverview.html)). The developer almost certainly used clang -Wl,-sectcreate,__DATA,__weights,resnet18_weights.bin or similar at link time, to bake the weight tensor blob directly into the executable
+  -> it already shows a __weights directory which is promising. The sectname __weights is a custom section, not part of the standard Mach-O layout ([Source](https://developer.apple.com/library/archive/documentation/Performance/Conceptual/CodeFootprint/Articles/MachOOverview.html)). 
+  The developer almost certainly used `lang -Wl,-sectcreate,__DATA,__weights,resnet18_weights.bin` or similar at link time, to bake the weight tensor blob directly into the executable
+
+
+  As we now know which high certainty the the application is using ResNet18, the question is which Quantiztaion has been used (FP32 vs FP16 vs INT8): 
+  I therefore look at the sizes + offsets in the __weights and __data section
+
+```
+otool -l classifier | awk '/sectname (__weights|__data|__const)/{p=1; print; next} p && /sectname/{p=0} p'
+```
+
+This yields besides other things the size of the __weights section: 
+
+```shell
+Section
+  sectname __weights
+   segname __DATA
+      addr 0x0000000100028020
+      size 0x0000000002aac704
+    offset 163872
+     align 2^4 (16)
+```
+
+which tells that the size of __weights is:  44,747,524 bytes corresponds to ~ 44,7 MB.
+
+Arguments for FP32 Weights:
+- Default in ResNet
+- No idications of quantization in the `strings` output like 
+*.scale, *.zero_point, *._packed_params, or quant.* / dequant.* ([Source](https://mbrenndoerfer.com/writing/weight-quantization-basics-scale-zero-point-calibration#google_vignette))
+- Probably the stronges: The typicall ResNet18 with FP32 Weights comes with 44.6MB of weights ([Source](https://aihub.qualcomm.com/models/resnet18))
+
+```shell
+ strings -a classifier | grep -E "^fc\.|^classifier\.|fc\.weight|fc\.bias|classifier\.weight"
+
+fc.weight
+fc.bias
+```
+This idicates a simple linear layer (`torch.nn.Linear`). This makes sense as the purpose of this authorization model is a binary classification.
+
+
+One last test wether there is any preprocessing present: 
+
+Normalization via ImageNet ([Source](https://www.reddit.com/r/MachineLearning/comments/10rtis6/d_imagenet_normalization_vs_1_1_normalization/)): 
+
+`xxd classifier | grep -iE "39 b4 f8 3d|8e 67 e9 3d|a1 d4 cf 3d"`
+
+
+Nothing! I hence conclude that ImageNet Normalization has not been applied here.
+
+
+```
+otool -tV classifier | sed -n '/_main:/,/^_/p' | head -200
+```
+
+
+### Disassembly file:
+Disassembling the Mach‑O text section and demangling any C++ symbols it finds. That reveals:
+
+- The compiled runtime (CPython, Cython runtime, libraries possibly C++-based ML libs).
+- Any glue code / wrappers created by the packager or compiler. 
+
+
+```shell
+otool -tV classifier | c++filt > main_demangled.txt
+wc -l main_demangled.txt
+```
+
+This tells me that the original pipeline was probably something like:  Python → some C++ implementation (e.g., re‑implementation or library) → compiled binary.
+The main_demangled.txt then includes the decoding of ASCII-safe labels in human-readable form
+
+
+
+
+After some browsing I found the mangled C++ Symbol `__ZN2cv3MatC1ERKS0_RKNS_5Rect_IiEE` which apprently is the mangled usage of the OpenCV constructor: cv::Mat::Mat(const cv::Mat& m, const cv::Rect_<int>& roi). It creates a Region of Interest (ROI) submatrix header that shares pixel data with the original matrix.
+
+
+Given the context, if can infered
+
+```assembly
+0x100016b30:  ldr   w8, [sp, #0x54]      ; w8 = resized height (e.g. ~256 or larger)
+0x100016b34:  sub   w8, w8, #0xe0        ; w8 = w8 - 224  (0xe0 = 224)
+0x100016b38:  add   w8, w8, w8, lsr #31  ; round toward zero for signed div
+0x100016b3c:  asr   w8, w8, #1           ; w8 = (height - 224) / 2
+0x100016b40:  sub   w9, w22, #0xe0       ; w9 = width - 224
+0x100016b44:  add   w9, w9, w9, lsr #31
+0x100016b48:  asr   w9, w9, #1           ; w9 = (width - 224) / 2
+0x100016b4c:  stp   w8, w9, [sp, #0x88]
+0x100016b50:  movi.2s v0, #0xe0          ; v0 = [224, 224]
+0x100016b54:  str   d0, [sp, #0x90]
+0x100016b58:  sub   x0, x29, #0x100
+0x100016b5c:  add   x1, sp, #0x130       ; source: resized image Mat
+0x100016b60:  add   x2, sp, #0x88        ; cv::Rect{x=(w-224)/2, y=(h-224)/2, w=224, h=224}
+0x100016b64:  bl    cv::Mat(const Mat&, const Rect&)   ; ROI constructor
+0x100016b6c:  bl    cv::Mat::clone()                    ; make contiguous copy
+```
+
+ ```
+ Pipeline:
+  argv[1] → cv::imread (BGR uint8 HWC)
+  → custom resize (shortest side → 256, bilinear-like with anti-aliasing, FP64 internally)
+  → center crop (224×224, BGR uint8 HWC)
+  → normalize: for each pixel, (x/255 - mean) / std, with mean/std mapped to RGB
+  → write to planar FP32 CHW {1, 3, 224, 224} in RGB order
+ ```
+
+ ## Weights
+ 1. I've extracted the __weights section into a flat file to then parse it into a torchvision ResNet-18 state_dict.
+
+ I therefore use the offset previously identified (163872 = 0x28020) and know that I need to count 44,747,524 bytes! 
+I then use dd to copy the relevant byte range from classifier to weights.bin
+
+`dd if=classifier of=weights.bin bs=1 skip=163872 count=44747524 status=progress`
