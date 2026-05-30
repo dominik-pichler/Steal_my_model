@@ -15,6 +15,23 @@
 ⠀⠀⠀⠀⠀⠀⠀⠀
 ```
 
+The goal of this repo was to reverse-engineer a computer vision based authentication system with no further information provided then the application binary (`classifier`)
+
+## Model findings
+
+The binary embeds a **torchvision ResNet-18** binary classifier with **FP32 weights** baked into a custom `__weights` Mach-O section (offset `0x28020`, size `44,747,524` bytes).
+
+- **Architecture**: stock `torchvision.models.resnet18(num_classes=1)` — confirmed via embedded PyTorch state_dict key names (`layer1.0.conv1.weight`, etc.) and exact byte-count match after parsing.
+- **Input**: 224×224 RGB FP32, NCHW (confirmed via oneDNN `memory::desc` arguments and the 602,112-byte input buffer allocation).
+- **Preprocessing**: canonical torchvision ImageNet pipeline — resize shortest side to 256, center crop 224×224, normalize with ImageNet mean `[0.485, 0.456, 0.406]` and std `[0.229, 0.224, 0.225]`. BGR→RGB swap done implicitly via channel-to-plane assignment.
+- **Decision rule**: single logit thresholded at 0 (`output[0] < 0 → 1`, else `0`), printed as a bool.
+- **Inference runtime**: hand-rolled oneDNN on CPU, with OpenCV for image I/O.
+- **Fine-tuning provenance**: very likely fine-tuned from ImageNet-pretrained ResNet-18 — the architecture, preprocessing constants, and narrow `fc.weight` distribution (std ≈ 0.005) all converge on that conclusion.
+- **Unknown**: what the two classes represent. No label strings embedded; would require behavioral probing or external context.
+
+
+
+--- 
 
 
 First step is to classfiy the type of the executable:⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
