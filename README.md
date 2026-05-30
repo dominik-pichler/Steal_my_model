@@ -74,10 +74,10 @@ Classic examples here are:
 - Gaussian blur — periodically smooth out high-frequency components
 
 
-| Image 1 | Image 2 |
+| Class 0 | Class 1 |
 |--------|--------|
-| ![img1](feature_viz/class1_rank04_ch046_w-0.0124-4.jpg) | ![img2](feature_viz/class1_rank05_ch236_w+0.0119-3.jpg) |
-| ![img3](feature_viz/class1_rank06_ch077_w-0.0118-2.jpg) | ![img4](feature_viz/class1_rank07_ch328_w-0.0115.jpg) |
+| ![img1](feature_viz/class0_rank01_ch105_w-0.0318.png) | ![img2](feature_viz/class1_rank01_ch150_w+0.0197.png) |
+| ![img3](feature_viz/class0_rank04_ch280_w-0.0151.png) | ![img4](feature_viz/class1_rank04_ch046_w+0.0124.png) |
 
 ### 3. Behavioral probing on a diverse image set
 
