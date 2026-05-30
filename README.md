@@ -39,9 +39,6 @@ Approaches:
 ### 1. Weight Differences to the original ResNet 18
 For this, I've defined the following script `compare_finetuned_vs_pretrained.py`
 
-```
-
-```
 It consequently helped to derive the **Fine-tuning recipe**: head-only fine-tune of torchvision's
   `ResNet18_Weights.IMAGENET1K_V1`. All 60 learned backbone parameters are
   bit-identical to the published pretrained weights; only the `fc` layer
@@ -55,6 +52,32 @@ It consequently helped to derive the **Fine-tuning recipe**: head-only fine-tune
 For the handful of features the FC layer weights most heavily (out of the 512 features), generate synthetic images that maximally activate each feature. The result is a kind of "dream image" showing what each feature is tuned to detect.
 These aren't training images — they're synthetic visualizations of what the network looks for. But they can be visually striking and informative. If you visualize a heavily-weighted feature and see "this looks like it's responding to leaves" or "this responds to wheels" or "this responds to skin texture," that's a strong hint about the training domain.
 This is what produces the famous DeepDream-style images. Olah et al.'s Distill articles cover the methodology well.
+
+I used this approach to test if so called dream images can guide the search for smart choices when it comes to behavioral probing. 
+
+So the idea was to aim for activation maximization by: 
+
+1. Start with an input tensor of random noise (224×224×3)
+2. Mark it as requiring gradients
+3. Run a forward pass and read the activation of one specific channel deep in the network
+4. Define "loss" as the negative mean activation of that channel (we want to maximize it)
+5. Backprop the loss to the input, take a gradient step on the input pixels
+6. Repeat for a few hundred steps
+
+
+In order to get more meaningfull results, it makes sense to steer/regularize the image-generation process. 
+Classic examples here are: 
+
+- Frequency penalty — discourage high-frequency pixel-level noise
+- Pixel decorrelation — parameterize the image in a smarter color space so RGB channels don't fight each other
+- Spatial transformations / jitter — at each step, slightly shift/rotate the image before the forward pass, so the optimization can't exploit single-pixel artifacts
+- Gaussian blur — periodically smooth out high-frequency components
+
+
+| Image 1 | Image 2 |
+|--------|--------|
+| ![img1](feature_viz/class1_rank04_ch046_w-0.0124-4.jpg) | ![img2](feature_viz/class1_rank05_ch236_w+0.0119-3.jpg) |
+| ![img3](feature_viz/class1_rank06_ch077_w-0.0118-2.jpg) | ![img4](feature_viz/class1_rank07_ch328_w-0.0115.jpg) |
 
 ### 3. Behavioral probing on a diverse image set
 
