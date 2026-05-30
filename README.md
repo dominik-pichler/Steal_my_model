@@ -557,3 +557,8 @@ I therefore use the offset previously identified (163872 = 0x28020) and know tha
 I then use dd to copy the relevant byte range from classifier to weights.bin
 
 `dd if=classifier of=weights.bin bs=1 skip=163872 count=44747524 status=progress`
+
+
+Follwing this, I setup a script that turns the __weigth binary into a pytorch state_dict. 
+This can be found in `parts_weights.py`. 
+After being able to validate my hypothesis, I used `save_model.py`to save the reconstructed weights and built a inferece service in `ìnter_with_model.py`
