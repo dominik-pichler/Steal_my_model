@@ -551,9 +551,9 @@ Given the context, if can infered
  ```
 
  ## Weights
- 1. I've extracted the __weights section into a flat file to then parse it into a torchvision ResNet-18 state_dict.
+ I've extracted the __weights section into a flat file to then parse it into a torchvision ResNet-18 state_dict.
 
- I therefore use the offset previously identified (163872 = 0x28020) and know that I need to count 44,747,524 bytes! 
+I therefore use the offset previously identified (163872 = 0x28020) and know that I need to count 44,747,524 bytes! 
 I then use dd to copy the relevant byte range from classifier to weights.bin
 
 `dd if=classifier of=weights.bin bs=1 skip=163872 count=44747524 status=progress`
