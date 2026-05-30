@@ -75,9 +75,15 @@ Classic examples here are:
 
 
 | Class 0 | Class 1 |
-|--------|--------|
-| ![img1](feature_viz/class0_rank01_ch105_w-0.0318.png) | ![img2](feature_viz/class1_rank01_ch150_w+0.0197.png) |
-| ![img3](feature_viz/class0_rank04_ch280_w-0.0151.png) | ![img4](feature_viz/class1_rank04_ch046_w+0.0124.png) |
+|--------|---------|
+| ![c0_r1](feature_viz/class0_rank01_ch105_w-0.0318.png) | ![c1_r1](feature_viz/class1_rank01_ch150_w+0.0197.png) |
+| ![c0_r2](feature_viz/class0_rank02_ch300_w-0.0193.png) | ![c1_r2](feature_viz/class1_rank02_ch283_w+0.0146.png) |
+| ![c0_r3](feature_viz/class0_rank03_ch124_w-0.0165.png) | ![c1_r3](feature_viz/class1_rank03_ch008_w+0.0130.png) |
+| ![c0_r4](feature_viz/class0_rank04_ch280_w-0.0151.png) | ![c1_r4](feature_viz/class1_rank04_ch046_w+0.0124.png) |
+| ![c0_r5](feature_viz/class0_rank05_ch130_w-0.0150.png) | ![c1_r5](feature_viz/class1_rank05_ch236_w+0.0119.png) |
+| ![c0_r6](feature_viz/class0_rank06_ch397_w-0.0136.png) | ![c1_r6](feature_viz/class1_rank06_ch077_w+0.0118.png) |
+| ![c0_r7](feature_viz/class0_rank07_ch057_w-0.0135.png) | ![c1_r7](feature_viz/class1_rank07_ch328_w+0.0115.png) |
+| ![c0_r8](feature_viz/class0_rank08_ch451_w-0.0135.png) | ![c1_r8](feature_viz/class1_rank08_ch509_w+0.0114.png) |
 
 ### 3. Behavioral probing on a diverse image set
 
