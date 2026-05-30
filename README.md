@@ -31,8 +31,34 @@ The binary embeds a **torchvision ResNet-18** binary classifier with **FP32 weig
 
 
 
---- 
+## Training Data Findings
+After identifying the model and it's relevant paramters, the next step was to test whether I could identify the Training images used to train this model.
+As mentioned in the model finings, it could be savely concluded that a standard ResNet18 has been finetuned.
 
+Approaches: 
+### 1. Weight Differences to the original ResNet 18
+For this, I've defined the following script `compare_finetuned_vs_pretrained.py`
+
+```
+
+```
+It consequently helped to derive the **Fine-tuning recipe**: head-only fine-tune of torchvision's
+  `ResNet18_Weights.IMAGENET1K_V1`. All 60 learned backbone parameters are
+  bit-identical to the published pretrained weights; only the `fc` layer
+  was retrained (shape `(1, 512)` instead of `(1000, 512)`). BN running
+  statistics drifted during fine-tuning, indicating BN layers were left
+  in `train()` mode — typical of an unsophisticated fine-tuning script.
+  Consistent with a small training set (~hundreds to a few thousand examples).
+
+
+### 2. Feature visualization / activation maximization of the FC layer
+For the handful of features the FC layer weights most heavily (out of the 512 features), generate synthetic images that maximally activate each feature. The result is a kind of "dream image" showing what each feature is tuned to detect.
+These aren't training images — they're synthetic visualizations of what the network looks for. But they can be visually striking and informative. If you visualize a heavily-weighted feature and see "this looks like it's responding to leaves" or "this responds to wheels" or "this responds to skin texture," that's a strong hint about the training domain.
+This is what produces the famous DeepDream-style images. Olah et al.'s Distill articles cover the methodology well.
+
+### 3. Behavioral probing on a diverse image set
+
+# Step by step guide to discover model findings.
 
 First step is to classfiy the type of the executable:⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
 ```
