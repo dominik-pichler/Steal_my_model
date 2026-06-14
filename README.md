@@ -19,7 +19,7 @@ The goal of this repo was to reverse-engineer a computer vision based authentica
 
 ![img.png](imgs/img.png)
 
-Figure 1: Separation behavior across banks, adapted from Tramer & Carlini [2].
+Figure 1: Separation behavior across banks, adapted from Tramer & Carlini [2]
 ## Model findings
 
 The binary embeds a **torchvision ResNet-18** binary classifier with **FP32 weights** baked into a custom `__weights` Mach-O section (offset `0x28020`, size `44,747,524` bytes).
