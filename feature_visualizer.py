@@ -27,7 +27,7 @@ from PIL import Image
 
 STATE_DICT_PATH = "reconstructed_state_dict.pth"
 OUTPUT_DIR      = "feature_viz"
-TOP_K           = 8        # number of top-weighted features to visualize
+TOP_K           = 9       # number of top-weighted features to visualize
 N_STEPS         = 512      # optimization steps per feature (more = sharper, slower)
 LR              = 0.05     # learning rate for the input image
 JITTER_PIXELS   = 8        # random pixel-shift augmentation per step

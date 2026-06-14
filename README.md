@@ -85,6 +85,56 @@ Classic examples here are:
 | ![c0_r7](feature_viz/class0_rank07_ch057_w-0.0135.png) | ![c1_r7](feature_viz/class1_rank07_ch328_w+0.0115.png) |
 | ![c0_r8](feature_viz/class0_rank08_ch451_w-0.0135.png) | ![c1_r8](feature_viz/class1_rank08_ch509_w+0.0114.png) |
 
+
+**Conclusion**: While those images look interesting they dont provide much of interest as they're too high-entropy to read a concept from.
+I later found a paper by Haim et al. that predicted exactly this [1].
+They appear also to be the first to successfully reconstruct training images with their method of TBD
+
+So I switched gears before trying the heavy lifting from their paper:
+
+**My Core idea:** 
+The head is $f(x) = w·g(x) + b$. 
+Geometrically, $w$ is a single direction in ResNet18's 512-d feature space, 
+and the logit is just how far an image's embedding $g(x)$ projects along that direction (plus a constant $b$). 
+Even though a linear head doesn't memorize samples, it does point somewhere meaningful: $w ∝ Σ⁻¹(μ_pos − μ_neg)$. So w is aligned with the positive class's mean embedding (whitened by the feature covariance)
+$μ$ represents the mean embeding.
+Hence it can be concluded that hte classifier has been confronted with images from two different domains (μ_pos, μ_neg).
+
+
+1. So the goal is to rebuild $f$
+2. I therefore build different banks (groups of elements in the roughly same domain) and test the activation.Thereby I want to understand at least the
+rough shape of the domains
+    - Faces
+    - generic objects
+    - scenes (place like)
+    - textures
+    - animals 
+   
+3. Push them through the pipeline
+4. Look at each bank's logit distribution and compare against banks: $y = w·g(x) + b$
+
+5. $$ p = sigmoid(w·g(x) + b) = 1 / (1 + e^(−w·g(x) + b)) $$
+
+
+
+### Used Images
+| Bank     | Source dataset                                      | Download URLs                                            | Images written to | Notes                                      |
+| -------- | --------------------------------------------------- | -------------------------------------------------------- | ----------------- | ------------------------------------------ |
+| objects  | CIFAR-100 (via torchvision)                         | https://cave.cs.toronto.edu/kriz/cifar-100-python.tar.gz | banks/objects     | 800 images, upscaled 32×32 (see docstring) |
+| textures | DTD (Describable Textures Dataset, via torchvision) | https://thor.robots.ox.ac.uk/dtd/dtd-r1.0.1.tar.gz       | banks/textures    | 800 images                                 |
+| animals  | Oxford-IIIT Pet (via torchvision)                   | Images: https://thor.robots.ox.ac.uk/pets/images.tar.gz  |                   |                                            |
+
+
+### Derived logit distributions
+| Bank | n | logit_med | logit_p90 | logit_max | cos_med | cos_max | norm_med |
+|------|---:|----------:|----------:|----------:|--------:|--------:|---------:|
+| textures | 800 | 0.0265 | 0.2020 | 0.4858 | 0.0099 | 0.1457 | 25.49 |
+| faces | 800 | 0.0070 | 0.0076 | 0.0242 | 0.0046 | 0.0155 | 13.61 |
+| animals | 800 | -0.0908 | 0.0634 | 0.3511 | -0.0288 | 0.0908 | 27.76 |
+| objects | 800 | -0.3222 | -0.1324 | 0.0857 | -0.1189 | 0.0274 | 24.59 |
+
+
+Hence no clean bank winner
 ### 3. Behavioral probing on a diverse image set
 
 # Step by step guide to discover model findings.
@@ -634,3 +684,8 @@ I then use dd to copy the relevant byte range from classifier to weights.bin
 Follwing this, I setup a script that turns the __weigth binary into a pytorch state_dict. 
 This can be found in `parts_weights.py`. 
 After being able to validate my hypothesis, I used `save_model.py`to save the reconstructed weights and built a inferece service in `ìnter_with_model.py`
+
+
+## References
+
+1. N. Haim, G. Vardi, G. Yehudai, O. Shamir, and M. Irani, *Reconstructing Training Data from Trained Neural Networks*, NeurIPS 2022. [PDF](https://proceedings.neurips.cc/paper_files/paper/2022/file/906927370cbeb537781100623cca6fa6-Paper-Conference.pdf)
