@@ -140,11 +140,30 @@ rough shape of the domains
 
 
 Hence no clean bank winner and especially faces did not stand out. 
-While this run faced some limitations, it is imho fair to run no further experiments in this direction.
+So maybe the objects where beyond the ordinary - hence I ran a larger corpus probe (10k images of 10 classes): [ImageNette](https://github.com/fastai/imagenette)
+Suprisingly enough, the top images appeared to all be churches: 
+![img](recon_out/corpus/_TOP.png)
+
 
 ### More sophisticated approaches: 
+After running into unsophisticated results with the previous simple attempts, furhter approaches were investigated. 
+A major constraint was imposed by the absence of any domain knowledge - consequently, many attaches of the following taxonomy
+where deemed irrelevant right from the start.
+
 
 ![img.png](imgs/list_of_attacks.png)
+Figure 2: Separation behavior across banks, adapted from Tramer & Carlini [2]
+
+
+I found an interesting thing in the nn.BatchNorm2d of the ResNet: 
+- running_mean
+- running_var
+
+Both variables are buffering the per-channel feature statistics of the training distribution.
+To my understanding, DeepInversion [3] is taking advantage of this while providing a prior-free inversion attack.
+
+
+
 
 # Step by step guide to discover model findings.
 
@@ -701,3 +720,4 @@ After being able to validate my hypothesis, I used `save_model.py`to save the re
 2. F. Tramèr and N. Carlini, “Bypassing BoN Ranking in Logit Attacks,”
     arXiv preprint arXiv:2501.18934, 2025. Available at:
     https://arxiv.org/abs/2501.18934
+3. H. Yin, P. Molchanov, Z. Li, A. Mallya, T.-M. H. Hsu, H. Suen, J. Chen, J. Kautz, and J. M. Alvarez, "Dreaming to Distill: Data-free Knowledge Transfer via DeepInversion," in *Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)*, 2020, pp. 8715–8724.
