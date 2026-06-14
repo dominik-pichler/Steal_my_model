@@ -19,6 +19,7 @@ The goal of this repo was to reverse-engineer a computer vision based authentica
 
 ![img.png](imgs/img.png)
 
+Figure 1: Separation behavior across banks, adapted from Tramer & Carlini [2].
 ## Model findings
 
 The binary embeds a **torchvision ResNet-18** binary classifier with **FP32 weights** baked into a custom `__weights` Mach-O section (offset `0x28020`, size `44,747,524` bytes).
@@ -692,3 +693,6 @@ After being able to validate my hypothesis, I used `save_model.py`to save the re
 ## References
 
 1. N. Haim, G. Vardi, G. Yehudai, O. Shamir, and M. Irani, *Reconstructing Training Data from Trained Neural Networks*, NeurIPS 2022. [PDF](https://proceedings.neurips.cc/paper_files/paper/2022/file/906927370cbeb537781100623cca6fa6-Paper-Conference.pdf)
+2. F. Tramèr and N. Carlini, “Bypassing BoN Ranking in Logit Attacks,”
+    arXiv preprint arXiv:2501.18934, 2025. Available at:
+    https://arxiv.org/abs/2501.18934
