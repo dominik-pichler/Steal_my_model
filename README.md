@@ -17,6 +17,8 @@
 
 The goal of this repo was to reverse-engineer a computer vision based authentication system with no further information provided then the application binary (`classifier`)
 
+![img.png](imgs/img.png)
+
 ## Model findings
 
 The binary embeds a **torchvision ResNet-18** binary classifier with **FP32 weights** baked into a custom `__weights` Mach-O section (offset `0x28020`, size `44,747,524` bytes).
@@ -134,7 +136,8 @@ rough shape of the domains
 | objects | 800 | -0.3222 | -0.1324 | 0.0857 | -0.1189 | 0.0274 | 24.59 |
 
 
-Hence no clean bank winner
+Hence no clean bank winner and especially faces did not stand out. 
+While this run faced some limitations, it is imho fair to run no further exerpiements in this direction.
 ### 3. Behavioral probing on a diverse image set
 
 # Step by step guide to discover model findings.
