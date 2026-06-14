@@ -38,7 +38,9 @@ The binary embeds a **torchvision ResNet-18** binary classifier with **FP32 weig
 After identifying the model and it's relevant paramters, the next step was to test whether I could identify the Training images used to train this model.
 As mentioned in the model finings, it could be savely concluded that a standard ResNet18 has been finetuned.
 
-Approaches: 
+
+
+Approaches:
 ### 1. Weight Differences to the original ResNet 18
 For this, I've defined the following script `compare_finetuned_vs_pretrained.py`
 
@@ -138,8 +140,11 @@ rough shape of the domains
 
 
 Hence no clean bank winner and especially faces did not stand out. 
-While this run faced some limitations, it is imho fair to run no further exerpiements in this direction.
-### 3. Behavioral probing on a diverse image set
+While this run faced some limitations, it is imho fair to run no further experiments in this direction.
+
+### More sophisticated approaches: 
+
+![img.png](imgs/list_of_attacks.png)
 
 # Step by step guide to discover model findings.
 
